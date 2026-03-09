@@ -1,0 +1,1406 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>ماهر - مساعد طب الأسنان</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600&display=swap');
+
+  :root {
+    --bg: #f0f4f8;
+    --surface: #ffffff;
+    --primary: #0d7377;
+    --primary-light: #14a3a8;
+    --primary-dark: #095557;
+    --accent: #ff6b35;
+    --text: #1a2332;
+    --text-muted: #64748b;
+    --border: #e2e8f0;
+    --msg-user: #0d7377;
+    --msg-bot: #ffffff;
+    --recording: #ef4444;
+    --recording-pulse: rgba(239, 68, 68, 0.3);
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
+    --shadow-lg: 0 8px 30px rgba(0,0,0,0.12);
+    --radius: 16px;
+    --radius-sm: 10px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    height: 100%;
+    overflow: hidden;
+    font-family: 'IBM Plex Sans Arabic', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .app {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    height: 100dvh;
+    max-width: 600px;
+    margin: 0 auto;
+    background: var(--bg);
+  }
+
+  /* ——— Header ——— */
+  .header {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: white;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    box-shadow: var(--shadow-md);
+    position: relative;
+    z-index: 10;
+  }
+
+  .header-icon {
+    width: 44px;
+    height: 44px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+
+  .tooth-avatar {
+    font-size: 22px;
+    position: relative;
+    display: inline-block;
+  }
+
+  .tooth-avatar::after {
+    content: '';
+    position: absolute;
+    bottom: 2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 16px;
+    height: 5px;
+    border-bottom: 2.5px solid rgba(255,255,255,0.9);
+    border-radius: 0 0 8px 8px;
+  }
+
+  .header-text h1 {
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  .header-text p {
+    font-size: 12px;
+    opacity: 0.8;
+    font-weight: 300;
+    margin-top: 2px;
+  }
+
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    background: #34d399;
+    border-radius: 50%;
+    margin-right: auto;
+    animation: pulse-dot 2s infinite;
+  }
+
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  /* ——— Messages Area ——— */
+  .messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+
+  .msg {
+    max-width: 85%;
+    padding: 12px 16px;
+    border-radius: var(--radius);
+    font-size: 15px;
+    line-height: 1.6;
+    animation: msg-in 0.3s ease;
+    position: relative;
+    word-wrap: break-word;
+  }
+
+  @keyframes msg-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .msg.user {
+    align-self: flex-start;
+    background: var(--msg-user);
+    color: white;
+    border-bottom-right-radius: 4px;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .msg.bot {
+    align-self: flex-end;
+    background: var(--msg-bot);
+    color: var(--text);
+    border-bottom-left-radius: 4px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border);
+  }
+
+  .msg .label {
+    font-size: 11px;
+    font-weight: 500;
+    opacity: 0.7;
+    margin-bottom: 4px;
+    display: block;
+  }
+
+  .msg.user .label { color: rgba(255,255,255,0.75); }
+  .msg.bot .label { color: var(--text-muted); }
+
+  .msg .voice-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    opacity: 0.65;
+    margin-top: 6px;
+  }
+
+  .msg .voice-player {
+    margin-top: 8px;
+  }
+
+  .msg .voice-player audio {
+    width: 100%;
+    height: 36px;
+    border-radius: 18px;
+  }
+
+  .msg.user .voice-player audio {
+    filter: brightness(2) contrast(0.8);
+  }
+
+  .typing-indicator {
+    align-self: flex-end;
+    background: var(--msg-bot);
+    border: 1px solid var(--border);
+    padding: 14px 20px;
+    border-radius: var(--radius);
+    border-bottom-left-radius: 4px;
+    display: flex;
+    gap: 5px;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .typing-indicator span {
+    width: 7px;
+    height: 7px;
+    background: var(--text-muted);
+    border-radius: 50%;
+    animation: bounce 1.4s infinite;
+  }
+
+  .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+  .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes bounce {
+    0%, 60%, 100% { transform: translateY(0); }
+    30% { transform: translateY(-6px); }
+  }
+
+  /* ——— Welcome Message ——— */
+  .welcome {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-muted);
+  }
+
+  .welcome-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+    display: block;
+  }
+
+  .welcome h2 {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+
+  .welcome p {
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  /* ——— Input Area ——— */
+  .input-area {
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding: 12px 16px;
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.04);
+  }
+
+  .text-input-wrap {
+    flex: 1;
+    background: var(--bg);
+    border: 2px solid var(--border);
+    border-radius: 24px;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    transition: border-color 0.2s;
+  }
+
+  .text-input-wrap:focus-within {
+    border-color: var(--primary-light);
+  }
+
+  .text-input {
+    width: 100%;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-family: inherit;
+    font-size: 15px;
+    color: var(--text);
+    direction: rtl;
+    resize: none;
+    max-height: 100px;
+    line-height: 1.4;
+  }
+
+  .text-input::placeholder {
+    color: var(--text-muted);
+    opacity: 0.7;
+  }
+
+  /* ——— Buttons ——— */
+  .btn {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    flex-shrink: 0;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  .btn:active {
+    transform: scale(0.92);
+  }
+
+  .btn-send {
+    background: var(--primary);
+    color: white;
+  }
+
+  .btn-send:hover {
+    background: var(--primary-light);
+  }
+
+  .btn-send:disabled {
+    background: var(--border);
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .btn-mic {
+    background: var(--primary);
+    color: white;
+    width: 56px;
+    height: 56px;
+    box-shadow: var(--shadow-md);
+  }
+
+  .btn-mic:hover {
+    background: var(--primary-light);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .btn-mic.recording {
+    background: var(--recording);
+    animation: pulse-ring 1.5s infinite;
+  }
+
+  @keyframes pulse-ring {
+    0% { box-shadow: 0 0 0 0 var(--recording-pulse); }
+    70% { box-shadow: 0 0 0 14px transparent; }
+    100% { box-shadow: 0 0 0 0 transparent; }
+  }
+
+  .btn-mic svg, .btn-send svg, .btn-attach svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  /* ——— Attach Button ——— */
+  .btn-attach {
+    background: var(--bg);
+    color: var(--primary);
+    border: 2px solid var(--border);
+    width: 48px;
+    height: 48px;
+  }
+
+  .btn-attach:hover {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+  }
+
+  /* ——— File Preview Bar ——— */
+  .file-preview-bar {
+    display: none;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding: 10px 16px;
+    gap: 10px;
+    align-items: center;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.04);
+  }
+
+  .file-preview-bar.active {
+    display: flex;
+  }
+
+  .file-preview-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .file-preview-thumb {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    object-fit: cover;
+    border: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  .file-preview-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    background: #fee2e2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+    border: 1px solid var(--border);
+  }
+
+  .file-preview-name {
+    font-size: 13px;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    direction: ltr;
+    text-align: left;
+  }
+
+  .file-preview-size {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  /* ——— File Attachment in Messages ——— */
+  .msg .file-attachment {
+    margin-top: 8px;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .msg .file-attachment img {
+    max-width: 100%;
+    max-height: 200px;
+    border-radius: 8px;
+    display: block;
+  }
+
+  .msg .file-attachment .pdf-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    background: rgba(0,0,0,0.06);
+    border-radius: 8px;
+    font-size: 13px;
+    color: inherit;
+  }
+
+  .msg.user .file-attachment .pdf-badge {
+    background: rgba(255,255,255,0.15);
+  }
+
+  /* ——— Recording Overlay ——— */
+  .recording-bar {
+    display: none;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding: 14px 20px;
+    align-items: center;
+    gap: 14px;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.04);
+  }
+
+  .recording-bar.active {
+    display: flex;
+  }
+
+  .rec-dot {
+    width: 12px;
+    height: 12px;
+    background: var(--recording);
+    border-radius: 50%;
+    animation: blink 1s infinite;
+    flex-shrink: 0;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  .rec-timer {
+    font-size: 16px;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    color: var(--text);
+    min-width: 50px;
+  }
+
+  .rec-text {
+    flex: 1;
+    font-size: 14px;
+    color: var(--text-muted);
+  }
+
+  .btn-cancel {
+    background: var(--bg);
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+  }
+
+  .btn-stop {
+    background: var(--recording);
+    color: white;
+  }
+
+  /* ——— Error Toast ——— */
+  .toast {
+    position: fixed;
+    bottom: 100px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: #1e293b;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 12px;
+    font-size: 14px;
+    opacity: 0;
+    transition: all 0.3s ease;
+    z-index: 100;
+    max-width: 90%;
+    text-align: center;
+    pointer-events: none;
+  }
+
+  .toast.visible {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* ——— Config Modal ——— */
+  .config-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    padding: 20px;
+  }
+
+  .config-overlay.hidden { display: none; }
+
+  .config-modal {
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 28px 24px;
+    max-width: 420px;
+    width: 100%;
+    box-shadow: var(--shadow-lg);
+  }
+
+  .config-modal h2 {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: var(--text);
+  }
+
+  .config-modal p {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+    line-height: 1.5;
+  }
+
+  .config-modal label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+
+  .config-modal input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 2px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-family: monospace;
+    font-size: 13px;
+    color: var(--text);
+    direction: ltr;
+    text-align: left;
+    margin-bottom: 16px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .config-modal input:focus {
+    border-color: var(--primary-light);
+  }
+
+  .config-modal .btn-save {
+    width: 100%;
+    padding: 12px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .config-modal .btn-save:hover {
+    background: var(--primary-light);
+  }
+
+  .config-modal .btn-save:disabled {
+    background: var(--border);
+    cursor: not-allowed;
+  }
+
+  .config-modal .btn-save:active {
+    background: var(--primary-dark);
+  }
+
+  /* ——— Scrollbar ——— */
+  .messages::-webkit-scrollbar { width: 4px; }
+  .messages::-webkit-scrollbar-track { background: transparent; }
+  .messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- Header -->
+  <div class="header">
+    <div class="header-icon"><span class="tooth-avatar">🦷</span></div>
+    <div class="header-text">
+      <h1>ماهر</h1>
+      <p>تسجيل بيانات المرضى بعد العمليات</p>
+    </div>
+    <div class="status-dot"></div>
+  </div>
+
+  <!-- Messages -->
+  <div class="messages" id="messages">
+    <div class="welcome">
+      <span class="welcome-icon">🏥</span>
+      <h2>مرحباً بك</h2>
+      <p>أرسل رسالة نصية، سجّل ملاحظات صوتية، أو أرفق صور ومستندات للسجلات الطبية</p>
+    </div>
+  </div>
+
+  <!-- Recording Bar (shown during recording) -->
+  <div class="recording-bar" id="recordingBar">
+    <div class="rec-dot"></div>
+    <span class="rec-timer" id="recTimer">0:00</span>
+    <span class="rec-text">جاري التسجيل...</span>
+    <button class="btn btn-cancel" id="cancelRecBtn" type="button" title="إلغاء">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <button class="btn btn-stop" id="stopRecBtn" type="button" title="إرسال">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+    </button>
+  </div>
+
+  <!-- File Preview Bar (shown when file selected) -->
+  <div class="file-preview-bar" id="filePreviewBar">
+    <div class="file-preview-item" id="filePreviewItem"></div>
+    <button class="btn btn-cancel" id="cancelFileBtn" type="button" title="إلغاء">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <button class="btn btn-stop" id="sendFileBtn" type="button" title="إرسال الملف">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+    </button>
+  </div>
+
+  <!-- Input Area (hidden during recording) -->
+  <div class="input-area" id="inputArea">
+    <button class="btn btn-mic" id="micBtn" type="button" title="تسجيل صوتي">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="9" y="1" width="6" height="12" rx="3"/>
+        <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+        <line x1="12" y1="19" x2="12" y2="23"/>
+        <line x1="8" y1="23" x2="16" y2="23"/>
+      </svg>
+    </button>
+    <input type="file" id="fileInput" accept="image/*,application/pdf" style="display:none">
+    <button class="btn btn-attach" id="attachBtn" type="button" title="إرفاق ملف">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+      </svg>
+    </button>
+    <div class="text-input-wrap">
+      <textarea class="text-input" id="textInput" rows="1" placeholder="اكتب ملاحظاتك هنا..." oninput="autoResize(this)" onkeydown="handleKey(event)"></textarea>
+    </div>
+    <button class="btn btn-send" id="sendBtn" type="button" disabled title="إرسال">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.4 20.4l17.45-7.48a1 1 0 0 0 0-1.84L3.4 3.6a.993.993 0 0 0-1.39.91L2 9.12c0 .5.37.93.87.99L17 12 2.87 13.88c-.5.07-.87.5-.87 1l.01 4.61c0 .71.73 1.2 1.39.91z"/></svg>
+    </button>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Config Modal -->
+<div class="config-overlay" id="configOverlay">
+  <div class="config-modal">
+    <h2>⚙️ إعداد الاتصال</h2>
+    <p>أدخل عنوان webhook الخاص بك n8n Chat Trigger لربط المساعد بسير العمل الخاص بك</p>
+    <label for="webhookUrl">Webhook URL</label>
+    <input type="url" id="webhookUrl" placeholder="https://your-n8n.app.n8n.cloud/webhook/..." dir="ltr">
+    <label for="authUser">اسم المستخدم (Basic Auth) — اختياري</label>
+    <input type="text" id="authUser" placeholder="username" dir="ltr">
+    <label for="authPass">كلمة المرور — اختياري</label>
+    <input type="password" id="authPass" placeholder="password" dir="ltr">
+    <button class="btn-save" id="saveConfigBtn" type="button">حفظ والبدء</button>
+  </div>
+</div>
+
+<script>
+// ———————————————————————————————————————————
+// CONFIGURATION
+// ———————————————————————————————————————————
+const STORAGE_KEY = 'dental_chat_config';
+const SESSION_KEY = 'dental_chat_session';
+const HISTORY_KEY = 'dental_chat_history';
+const MAX_RECORD_SEC = 120; // 2 minutes max
+const HISTORY_MAX_AGE_MS = 24 * 60 * 60 * 1000; // 24 hours
+
+let config = loadConfig();
+
+// Persistent session ID using localStorage
+// Default matches existing records in Google Sheet
+const DEFAULT_SESSION_ID = '8a79b555-7613-4ceb-8358-68726d0754e0';
+let sessionId = loadSession();
+
+function loadConfig() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return saved ? JSON.parse(saved) : null;
+  } catch { return null; }
+}
+
+function loadSession() {
+  let sid = localStorage.getItem(SESSION_KEY);
+  if (!sid) {
+    sid = DEFAULT_SESSION_ID;
+    localStorage.setItem(SESSION_KEY, sid);
+  }
+  return sid;
+}
+
+function saveConfig() {
+  const url = document.getElementById('webhookUrl').value.trim();
+  if (!url) { showToast('الرجاء إدخال عنوان webhook'); return; }
+  config = {
+    webhookUrl: url,
+    authUser: document.getElementById('authUser').value.trim(),
+    authPass: document.getElementById('authPass').value.trim()
+  };
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
+  document.getElementById('configOverlay').classList.add('hidden');
+  loadHistory();
+  showToast('تم الحفظ بنجاح');
+}
+
+// Show config if no webhook saved
+if (!config || !config.webhookUrl) {
+  document.getElementById('configOverlay').classList.remove('hidden');
+} else {
+  document.getElementById('configOverlay').classList.add('hidden');
+}
+
+// ———————————————————————————————————————————
+// CHAT HISTORY (24h persistence)
+// ———————————————————————————————————————————
+function saveToHistory(text, type, isVoice) {
+  try {
+    const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+    history.push({ text, type, isVoice, timestamp: Date.now() });
+    // Keep max 200 messages to avoid localStorage bloat
+    if (history.length > 200) history.splice(0, history.length - 200);
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+  } catch (e) { console.warn('saveToHistory:', e); }
+}
+
+function loadHistory() {
+  try {
+    const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+    const cutoff = Date.now() - HISTORY_MAX_AGE_MS;
+    const recent = history.filter(m => m.timestamp >= cutoff);
+    // Prune old messages
+    if (recent.length !== history.length) {
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(recent));
+    }
+    if (recent.length > 0) {
+      // Remove welcome message
+      const welcome = messagesEl.querySelector('.welcome');
+      if (welcome) welcome.remove();
+      // Restore messages without animation
+      for (const msg of recent) {
+        const div = document.createElement('div');
+        div.className = `msg ${msg.type}`;
+        div.style.animation = 'none';
+        const label = msg.type === 'user' ? 'أنت' : 'ماهر';
+        let html = `<span class="label">${label}</span>${escapeHtml(msg.text)}`;
+        if (msg.isVoice) {
+          html += `<div class="voice-tag">🎙️ رسالة صوتية</div>`;
+        }
+        div.innerHTML = html;
+        messagesEl.appendChild(div);
+      }
+      scrollToBottom();
+    }
+  } catch (e) { console.error('loadHistory:', e); }
+}
+
+// ———————————————————————————————————————————
+// MESSAGING
+// ———————————————————————————————————————————
+const messagesEl = document.getElementById('messages');
+const textInput = document.getElementById('textInput');
+const sendBtn = document.getElementById('sendBtn');
+
+textInput.addEventListener('input', () => {
+  sendBtn.disabled = !textInput.value.trim();
+});
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 100) + 'px';
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendText();
+  }
+}
+
+function scrollToBottom() {
+  requestAnimationFrame(() => {
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  });
+}
+
+function addMessage(text, type, isVoice = false, audioUrl = null) {
+  const welcome = messagesEl.querySelector('.welcome');
+  if (welcome) welcome.remove();
+
+  const div = document.createElement('div');
+  div.className = `msg ${type}`;
+
+  const label = type === 'user' ? 'أنت' : 'ماهر';
+  let html = `<span class="label">${label}</span>${escapeHtml(text)}`;
+  if (isVoice && !audioUrl) {
+    html += `<div class="voice-tag">🎙️ رسالة صوتية</div>`;
+  }
+  div.innerHTML = html;
+
+  // Create audio player via DOM API (Safari requires createElement for media elements)
+  if (audioUrl) {
+    const playerDiv = document.createElement('div');
+    playerDiv.className = 'voice-player';
+    const audio = document.createElement('audio');
+    audio.controls = true;
+    audio.preload = 'auto';
+    audio.src = audioUrl;
+    playerDiv.appendChild(audio);
+    div.appendChild(playerDiv);
+  }
+
+  messagesEl.appendChild(div);
+  scrollToBottom();
+  saveToHistory(text, type, isVoice);
+
+  return div;
+}
+
+function addTyping() {
+  const div = document.createElement('div');
+  div.className = 'typing-indicator';
+  div.id = 'typingIndicator';
+  div.innerHTML = '<span></span><span></span><span></span>';
+  messagesEl.appendChild(div);
+  scrollToBottom();
+}
+
+function removeTyping() {
+  const el = document.getElementById('typingIndicator');
+  if (el) el.remove();
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('visible');
+  setTimeout(() => toast.classList.remove('visible'), 3000);
+}
+
+function getAuthHeaders() {
+  const headers = {};
+  if (config.authUser && config.authPass) {
+    headers['Authorization'] = 'Basic ' + btoa(config.authUser + ':' + config.authPass);
+  }
+  return headers;
+}
+
+// ——— Send Text Message ———
+async function sendText() {
+  const text = textInput.value.trim();
+  if (!text || !config?.webhookUrl) return;
+
+  textInput.value = '';
+  textInput.style.height = 'auto';
+  sendBtn.disabled = true;
+
+  addMessage(text, 'user');
+  addTyping();
+
+  try {
+    const response = await fetch(config.webhookUrl + '?action=sendMessage', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders()
+      },
+      body: JSON.stringify({
+        action: 'sendMessage',
+        chatInput: text,
+        sessionId: sessionId
+      })
+    });
+
+    removeTyping();
+
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+    const data = await response.json();
+    const reply = extractReply(data);
+    addMessage(reply, 'bot');
+
+  } catch (err) {
+    removeTyping();
+    console.error('Send error:', err);
+    showToast('خطأ في الإرسال — تحقق من الاتصال');
+  }
+}
+
+// ——— Send Audio Message ———
+async function sendAudio(blob) {
+  if (!config?.webhookUrl) return;
+
+  const audioUrl = URL.createObjectURL(blob);
+  addMessage('تسجيل صوتي', 'user', true, audioUrl);
+  addTyping();
+
+  try {
+    const formData = new FormData();
+    formData.append('action', 'sendMessage');
+    formData.append('sessionId', sessionId);
+    formData.append('chatInput', '');
+
+    // Determine file extension based on MIME type
+    const mimeToExt = {
+      'audio/webm': 'webm',
+      'audio/mp4': 'm4a',
+      'audio/ogg': 'ogg',
+      'audio/mpeg': 'mp3',
+      'audio/wav': 'wav'
+    };
+    const baseType = blob.type.split(';')[0];
+    const ext = mimeToExt[baseType] || 'webm';
+    const filename = `voice_${Date.now()}.${ext}`;
+
+    formData.append('files', blob, filename);
+
+    const response = await fetch(config.webhookUrl + '?action=sendMessage', {
+      method: 'POST',
+      headers: {
+        ...getAuthHeaders()
+      },
+      body: formData
+    });
+
+    removeTyping();
+
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+    const data = await response.json();
+    const reply = extractReply(data);
+    addMessage(reply, 'bot');
+
+  } catch (err) {
+    removeTyping();
+    console.error('Audio send error:', err);
+    showToast('خطأ في إرسال التسجيل — تحقق من الاتصال');
+  }
+}
+
+function extractReply(data) {
+  // n8n Chat Trigger can return in multiple formats
+  if (typeof data === 'string') return data;
+  if (data.output) return data.output;
+  if (data.text) return data.text;
+  if (data.response) return data.response;
+  if (data.message) return data.message;
+  if (Array.isArray(data) && data.length > 0) {
+    const first = data[0];
+    return first.output || first.text || first.response || first.message || JSON.stringify(first);
+  }
+  return JSON.stringify(data);
+}
+
+// ———————————————————————————————————————————
+// FILE UPLOAD
+// ———————————————————————————————————————————
+let selectedFile = null;
+
+function handleFileSelect(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  // Validate file size (max 10MB)
+  if (file.size > 10 * 1024 * 1024) {
+    showToast('حجم الملف كبير جداً — الحد الأقصى 10MB');
+    event.target.value = '';
+    return;
+  }
+
+  selectedFile = file;
+  showFilePreview(file);
+}
+
+function showFilePreview(file) {
+  const previewItem = document.getElementById('filePreviewItem');
+  const isImage = file.type.startsWith('image/');
+
+  let thumbHtml;
+  if (isImage) {
+    const url = URL.createObjectURL(file);
+    thumbHtml = `<img class="file-preview-thumb" src="${url}" alt="preview">`;
+  } else {
+    thumbHtml = `<div class="file-preview-icon">📄</div>`;
+  }
+
+  const sizeMB = (file.size / 1024 / 1024).toFixed(1);
+  const sizeStr = file.size < 1024 * 1024
+    ? `${Math.round(file.size / 1024)} KB`
+    : `${sizeMB} MB`;
+
+  previewItem.innerHTML = `
+    ${thumbHtml}
+    <div>
+      <div class="file-preview-name">${escapeHtml(file.name)}</div>
+      <div class="file-preview-size">${sizeStr}</div>
+    </div>
+  `;
+
+  document.getElementById('filePreviewBar').classList.add('active');
+  document.getElementById('inputArea').style.display = 'none';
+}
+
+function clearFileSelection() {
+  selectedFile = null;
+  document.getElementById('fileInput').value = '';
+  document.getElementById('filePreviewBar').classList.remove('active');
+  document.getElementById('inputArea').style.display = 'flex';
+}
+
+async function sendFile() {
+  if (!selectedFile || !config?.webhookUrl) return;
+
+  const file = selectedFile;
+  const isImage = file.type.startsWith('image/');
+
+  // Build message with file attachment
+  const msgText = isImage ? '📷 صورة مرفقة' : '📎 ملف مرفق: ' + file.name;
+  const fileUrl = isImage ? URL.createObjectURL(file) : null;
+
+  clearFileSelection();
+  addFileMessage(msgText, 'user', file, fileUrl);
+  addTyping();
+
+  try {
+    const formData = new FormData();
+    formData.append('action', 'sendMessage');
+    formData.append('sessionId', sessionId);
+    formData.append('chatInput', msgText);
+    formData.append('files', file, file.name);
+
+    const response = await fetch(config.webhookUrl + '?action=sendMessage', {
+      method: 'POST',
+      headers: {
+        ...getAuthHeaders()
+      },
+      body: formData
+    });
+
+    removeTyping();
+
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+    const data = await response.json();
+    const reply = extractReply(data);
+    addMessage(reply, 'bot');
+
+  } catch (err) {
+    removeTyping();
+    console.error('File send error:', err);
+    showToast('خطأ في إرسال الملف — تحقق من الاتصال');
+  }
+}
+
+function addFileMessage(text, type, file, previewUrl) {
+  const welcome = messagesEl.querySelector('.welcome');
+  if (welcome) welcome.remove();
+
+  const div = document.createElement('div');
+  div.className = `msg ${type}`;
+
+  const label = type === 'user' ? 'أنت' : 'ماهر';
+  let html = `<span class="label">${label}</span>${escapeHtml(text)}`;
+  div.innerHTML = html;
+
+  // Add file attachment preview
+  const attachDiv = document.createElement('div');
+  attachDiv.className = 'file-attachment';
+
+  if (previewUrl) {
+    const img = document.createElement('img');
+    img.src = previewUrl;
+    img.alt = file.name;
+    attachDiv.appendChild(img);
+  } else {
+    const badge = document.createElement('div');
+    badge.className = 'pdf-badge';
+    badge.textContent = '📄 ' + file.name;
+    attachDiv.appendChild(badge);
+  }
+
+  div.appendChild(attachDiv);
+  messagesEl.appendChild(div);
+  scrollToBottom();
+  saveToHistory(text, type, false);
+
+  return div;
+}
+
+// ———————————————————————————————————————————
+// VOICE RECORDING (MediaRecorder API)
+// ———————————————————————————————————————————
+let mediaRecorder = null;
+let audioChunks = [];
+let recordingTimer = null;
+let recordingSeconds = 0;
+let audioStream = null;
+
+async function startRecording() {
+  if (!config?.webhookUrl) {
+    document.getElementById('configOverlay').classList.remove('hidden');
+    return;
+  }
+
+  // Guard: check browser supports getUserMedia (file:// on Chrome blocks it)
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    showToast('المتصفح لا يدعم التسجيل — استخدم Safari أو افتح عبر HTTPS');
+    return;
+  }
+
+  try {
+    // Request microphone with preferred constraints
+    audioStream = await navigator.mediaDevices.getUserMedia({
+      audio: {
+        channelCount: 1,
+        sampleRate: { ideal: 16000 },
+        echoCancellation: true,
+        noiseSuppression: true
+      }
+    });
+    setupRecorder(audioStream);
+
+  } catch (err) {
+    console.error('Mic access error:', err.name, err.message, err);
+
+    if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+      showToast('يرجى السماح بالوصول إلى الميكروفون من إعدادات المتصفح');
+    } else if (err.name === 'NotFoundError') {
+      showToast('لم يتم العثور على ميكروفون');
+    } else if (err.name === 'OverconstrainedError') {
+      // Retry with minimal constraints
+      console.warn('OverconstrainedError — retrying with {audio: true}');
+      try {
+        audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        setupRecorder(audioStream);
+      } catch (retryErr) {
+        console.error('Mic retry failed:', retryErr.name, retryErr.message);
+        showToast('خطأ في الوصول إلى الميكروفون');
+      }
+    } else if (err.name === 'TypeError') {
+      showToast('المتصفح لا يدعم التسجيل — استخدم Safari أو افتح عبر HTTPS');
+    } else {
+      showToast('خطأ في الوصول إلى الميكروفون');
+    }
+  }
+}
+
+// Sets up MediaRecorder on an already-acquired audio stream
+function setupRecorder(stream) {
+  // Determine best supported MIME type
+  // Safari/iPad prefers mp4, Chrome/Firefox prefer webm
+  const mimeTypes = [
+    'audio/mp4',
+    'audio/webm;codecs=opus',
+    'audio/webm',
+    'audio/ogg;codecs=opus',
+    'audio/ogg'
+  ];
+
+  let selectedMime = '';
+  for (const mime of mimeTypes) {
+    if (MediaRecorder.isTypeSupported(mime)) {
+      selectedMime = mime;
+      break;
+    }
+  }
+
+  const options = selectedMime ? { mimeType: selectedMime } : {};
+  mediaRecorder = new MediaRecorder(stream, options);
+  audioChunks = [];
+
+  mediaRecorder.ondataavailable = (e) => {
+    if (e.data.size > 0) audioChunks.push(e.data);
+  };
+
+  mediaRecorder.onstop = () => {
+    clearInterval(recordingTimer);
+    stopAudioStream();
+
+    if (audioChunks.length > 0) {
+      const mimeType = mediaRecorder.mimeType || selectedMime || 'audio/webm';
+      const blob = new Blob(audioChunks, { type: mimeType });
+
+      if (blob.size > 500) { // Minimum size check (avoid empty recordings)
+        sendAudio(blob);
+      } else {
+        showToast('التسجيل قصير جداً — حاول مرة أخرى');
+      }
+    }
+
+    audioChunks = [];
+    showInputArea();
+  };
+
+  mediaRecorder.onerror = (e) => {
+    console.error('MediaRecorder error:', e);
+    clearInterval(recordingTimer);
+    stopAudioStream();
+    showInputArea();
+    showToast('خطأ في التسجيل');
+  };
+
+  // Start recording
+  mediaRecorder.start(1000); // Collect data every second
+  recordingSeconds = 0;
+  updateTimer();
+  recordingTimer = setInterval(() => {
+    recordingSeconds++;
+    updateTimer();
+    if (recordingSeconds >= MAX_RECORD_SEC) {
+      stopRecording();
+    }
+  }, 1000);
+
+  showRecordingBar();
+}
+
+function stopRecording() {
+  if (mediaRecorder && mediaRecorder.state === 'recording') {
+    mediaRecorder.stop();
+  }
+}
+
+function cancelRecording() {
+  audioChunks = []; // Clear chunks so onstop doesn't send
+  if (mediaRecorder && mediaRecorder.state === 'recording') {
+    mediaRecorder.stop();
+  }
+  clearInterval(recordingTimer);
+  stopAudioStream();
+  showInputArea();
+  showToast('تم إلغاء التسجيل');
+}
+
+function stopAudioStream() {
+  if (audioStream) {
+    audioStream.getTracks().forEach(t => t.stop());
+    audioStream = null;
+  }
+}
+
+function updateTimer() {
+  const mins = Math.floor(recordingSeconds / 60);
+  const secs = recordingSeconds % 60;
+  document.getElementById('recTimer').textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+}
+
+function showRecordingBar() {
+  document.getElementById('inputArea').style.display = 'none';
+  document.getElementById('recordingBar').classList.add('active');
+}
+
+function showInputArea() {
+  document.getElementById('recordingBar').classList.remove('active');
+  document.getElementById('inputArea').style.display = 'flex';
+}
+
+// ———————————————————————————————————————————
+// SETTINGS SHORTCUT (triple-tap header)
+// ———————————————————————————————————————————
+let headerTaps = 0;
+let headerTapTimer = null;
+document.querySelector('.header').addEventListener('click', () => {
+  headerTaps++;
+  clearTimeout(headerTapTimer);
+  headerTapTimer = setTimeout(() => { headerTaps = 0; }, 600);
+  if (headerTaps >= 3) {
+    headerTaps = 0;
+    document.getElementById('configOverlay').classList.remove('hidden');
+    // Pre-fill current config
+    if (config) {
+      document.getElementById('webhookUrl').value = config.webhookUrl || '';
+      document.getElementById('authUser').value = config.authUser || '';
+      document.getElementById('authPass').value = config.authPass || '';
+    }
+  }
+});
+
+// ———————————————————————————————————————————
+// TOUCH-FRIENDLY EVENT LISTENERS (iPad fix)
+// ———————————————————————————————————————————
+function addTapListener(el, handler) {
+  if (!el) return;
+  let touchFired = false;
+  el.addEventListener('touchend', function(e) {
+    e.preventDefault();
+    touchFired = true;
+    handler();
+  }, { passive: false });
+  el.addEventListener('click', function() {
+    if (touchFired) { touchFired = false; return; }
+    handler();
+  });
+}
+
+addTapListener(document.getElementById('saveConfigBtn'), saveConfig);
+addTapListener(document.getElementById('micBtn'), startRecording);
+addTapListener(document.getElementById('attachBtn'), function() {
+  document.getElementById('fileInput').click();
+});
+addTapListener(document.getElementById('sendBtn'), sendText);
+addTapListener(document.getElementById('cancelRecBtn'), cancelRecording);
+addTapListener(document.getElementById('stopRecBtn'), stopRecording);
+addTapListener(document.getElementById('cancelFileBtn'), clearFileSelection);
+addTapListener(document.getElementById('sendFileBtn'), sendFile);
+
+document.getElementById('fileInput').addEventListener('change', handleFileSelect);
+
+// ———————————————————————————————————————————
+// INIT: Load chat history and focus input
+// ———————————————————————————————————————————
+function initApp() {
+  if (config?.webhookUrl) {
+    loadHistory();
+    textInput.focus();
+  }
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initApp);
+} else {
+  initApp();
+}
+</script>
+</body>
+</html>
