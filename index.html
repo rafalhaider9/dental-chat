@@ -1064,7 +1064,7 @@ const textInput = document.getElementById('textInput');
 const sendBtn = document.getElementById('sendBtn');
 
 textInput.addEventListener('input', () => {
-  sendBtn.disabled = !textInput.value.trim();
+  sendBtn.disabled = !textInput.value.trim() && selectedFiles.length === 0;
 });
 
 function autoResize(el) {
@@ -1348,12 +1348,20 @@ function handleFileSelect(event) {
   selectedFiles = validFiles;
   if (selectedFiles.length > 0) {
     showFilesPreview(selectedFiles);
+    // BUG 5 FIX: Enable send button when files are selected
+    sendBtn.disabled = false;
   }
   event.target.value = '';
 }
 
+// BUG 6 FIX: Track object URLs for cleanup
+let previewObjectUrls = [];
+
 function showFilesPreview(files) {
   const previewItem = document.getElementById('filePreviewItem');
+  // Revoke previous object URLs before rebuilding
+  previewObjectUrls.forEach(url => URL.revokeObjectURL(url));
+  previewObjectUrls = [];
   previewItem.innerHTML = '';
 
   // Count badge
@@ -1375,6 +1383,7 @@ function showFilesPreview(files) {
 
     if (isImage) {
       const url = URL.createObjectURL(file);
+      previewObjectUrls.push(url);
       thumbHtml = `<img class="file-preview-thumb" src="${url}" alt="preview">`;
     } else {
       thumbHtml = `<div class="file-preview-icon">📄</div>`;
@@ -1429,21 +1438,30 @@ function removeFileFromSelection(index) {
 
 function clearFileSelection() {
   selectedFiles = [];
+  // BUG 6 FIX: Revoke all preview object URLs
+  previewObjectUrls.forEach(url => URL.revokeObjectURL(url));
+  previewObjectUrls = [];
   document.getElementById('fileInput').value = '';
   document.getElementById('filePreviewBar').classList.remove('active');
   document.getElementById('filePreviewItem').innerHTML = '';
+  // BUG 5 FIX: Re-evaluate send button state
+  sendBtn.disabled = !textInput.value.trim();
 }
 
 async function sendFilesWithText() {
   if (selectedFiles.length === 0 || !config?.webhookUrl) return;
 
-  const text = textInput.value.trim();
-  const msgText = text || ('📷 ' + selectedFiles.length + ' ملفات مرفقة');
+  // BUG 1 FIX: Capture files BEFORE clearing selection
+  const filesToSend = [...selectedFiles];
 
-  // Show file previews in chat
+  const text = textInput.value.trim();
+  const msgText = text || ('📷 ' + filesToSend.length + ' ملفات مرفقة');
+
+  // Show user message with file thumbnails inside it
+  const msgDiv = addMessage(msgText, 'user');
   const filePreviewDiv = document.createElement('div');
   filePreviewDiv.className = 'file-batch-preview';
-  selectedFiles.forEach(file => {
+  filesToSend.forEach(file => {
     const isImage = file.type.startsWith('image/');
     if (isImage) {
       const thumb = document.createElement('img');
@@ -1457,65 +1475,69 @@ async function sendFilesWithText() {
       filePreviewDiv.appendChild(badge);
     }
   });
+  // BUG 4 FIX: Append thumbnails inside the message div, not as sibling
+  msgDiv.appendChild(filePreviewDiv);
 
   clearFileSelection();
-  addMessage(msgText, 'user');
-  messagesEl.appendChild(filePreviewDiv);
   addTyping();
   textInput.value = '';
   textInput.style.height = 'auto';
+  sendBtn.disabled = true;
 
-  try {
-    const formData = new FormData();
-    formData.append('action', 'sendMessage');
-    formData.append('sessionId', sessionId);
-    formData.append('chatInput', msgText);
+  const formData = new FormData();
+  formData.append('action', 'sendMessage');
+  formData.append('sessionId', sessionId);
+  formData.append('chatInput', msgText);
 
-    // Append all files with the same key
-    selectedFiles.forEach(file => {
-      formData.append('files', file, file.name);
-    });
+  // Append all captured files
+  filesToSend.forEach(file => {
+    formData.append('files', file, file.name);
+  });
 
-    // Use XMLHttpRequest for progress tracking
-    const xhr = new XMLHttpRequest();
-    const progressDiv = document.getElementById('uploadProgress');
+  // Use XMLHttpRequest for progress tracking
+  const xhr = new XMLHttpRequest();
 
-    xhr.upload.addEventListener('progress', (e) => {
-      if (e.lengthComputable && progressDiv) {
-        const pct = Math.round((e.loaded / e.total) * 100);
-        document.querySelector('.upload-progress-bar').style.width = pct + '%';
-        document.querySelector('.upload-progress-text').textContent = `جاري الرفع: ${pct}%`;
-      }
-    });
-
-    xhr.addEventListener('load', async () => {
-      removeTyping();
-      if (xhr.status !== 200) throw new Error(`HTTP ${xhr.status}`);
-      const data = JSON.parse(xhr.responseText);
-      const reply = extractReply(data);
-      addMessage(reply.text, 'bot', false, null, null, reply.images);
-    });
-
-    xhr.addEventListener('error', () => {
-      removeTyping();
-      console.error('File send error');
-      showToast('خطأ في إرسال الملفات — تحقق من الاتصال');
-    });
-
-    // Set auth headers
-    const headers = getAuthHeaders();
-    for (const key in headers) {
-      xhr.setRequestHeader(key, headers[key]);
+  xhr.upload.addEventListener('progress', (e) => {
+    if (e.lengthComputable) {
+      const pct = Math.round((e.loaded / e.total) * 100);
+      const bar = document.querySelector('.upload-progress-bar');
+      const txt = document.querySelector('.upload-progress-text');
+      if (bar) bar.style.width = pct + '%';
+      if (txt) txt.textContent = `جاري الرفع: ${pct}%`;
     }
+  });
 
-    xhr.open('POST', config.webhookUrl + '?action=sendMessage');
-    xhr.send(formData);
-
-  } catch (err) {
+  // BUG 3 FIX: Handle success/error inside callbacks (no throw)
+  xhr.addEventListener('load', () => {
     removeTyping();
-    console.error('File send error:', err);
+    if (xhr.status >= 200 && xhr.status < 300) {
+      try {
+        const data = JSON.parse(xhr.responseText);
+        const reply = extractReply(data);
+        addMessage(reply.text, 'bot', false, null, reply.imageData, reply.images);
+      } catch (parseErr) {
+        console.error('Response parse error:', parseErr);
+        showToast('خطأ في قراءة الرد — تحقق من الاتصال');
+      }
+    } else {
+      console.error('HTTP error:', xhr.status);
+      showToast('خطأ في إرسال الملفات — HTTP ' + xhr.status);
+    }
+  });
+
+  xhr.addEventListener('error', () => {
+    removeTyping();
+    console.error('File send network error');
     showToast('خطأ في إرسال الملفات — تحقق من الاتصال');
+  });
+
+  // BUG 2 FIX: open() BEFORE setRequestHeader()
+  xhr.open('POST', config.webhookUrl + '?action=sendMessage');
+  const headers = getAuthHeaders();
+  for (const key in headers) {
+    xhr.setRequestHeader(key, headers[key]);
   }
+  xhr.send(formData);
 }
 
 function addFileMessage(text, type, file, previewUrl) {
@@ -1752,6 +1774,9 @@ let currentLightboxImages = [];
 let currentLightboxIndex = 0;
 let lightboxZoomLevel = 1;
 let lightboxPinchStart = null;
+let lightboxZoomAtPinchStart = 1; // BUG 8 FIX: track zoom level when pinch began
+let swipeStart = null;
+let lastTapTime = 0;
 
 function openLightbox(images, startIndex) {
   currentLightboxImages = images;
@@ -1761,18 +1786,13 @@ function openLightbox(images, startIndex) {
   const lightboxOverlay = document.getElementById('lightboxOverlay');
   const lightboxImg = document.getElementById('lightboxImg');
 
+  lightboxImg.style.transform = '';
   lightboxImg.src = images[startIndex].full;
   updateLightboxCounter();
   lightboxOverlay.classList.add('active');
 
   // Prevent body scroll
   document.body.style.overflow = 'hidden';
-
-  // Setup touch and click handlers
-  const container = document.querySelector('.lightbox-container');
-  container.addEventListener('touchstart', handleLightboxTouchStart, false);
-  container.addEventListener('touchmove', handleLightboxTouchMove, false);
-  container.addEventListener('touchend', handleLightboxTouchEnd, false);
 }
 
 function closeLightbox() {
@@ -1781,14 +1801,25 @@ function closeLightbox() {
   document.body.style.overflow = '';
   currentLightboxImages = [];
   lightboxZoomLevel = 1;
+  swipeStart = null;
+
+  const lightboxImg = document.getElementById('lightboxImg');
+  lightboxImg.style.transform = '';
 }
 
 function updateLightboxCounter() {
   const counter = document.getElementById('lightboxCounter');
-  counter.textContent = `${currentLightboxIndex + 1} / ${currentLightboxImages.length}`;
+  if (currentLightboxImages.length <= 1) {
+    counter.textContent = '';
+  } else {
+    counter.textContent = `${currentLightboxIndex + 1} / ${currentLightboxImages.length}`;
+  }
 }
 
 function navigateLightbox(direction) {
+  // Only navigate if not zoomed in (avoid accidental swipes while panning)
+  if (lightboxZoomLevel > 1) return;
+
   const newIndex = currentLightboxIndex + direction;
   if (newIndex >= 0 && newIndex < currentLightboxImages.length) {
     currentLightboxIndex = newIndex;
@@ -1800,96 +1831,94 @@ function navigateLightbox(direction) {
   }
 }
 
-let lastTapTime = 0;
-let tapCount = 0;
-
-function handleLightboxTouchStart(e) {
-  if (e.touches.length === 2) {
-    // Pinch zoom start
-    lightboxPinchStart = {
-      distance: getTouchDistance(e.touches[0], e.touches[1])
-    };
-  } else if (e.touches.length === 1) {
-    // Single touch: prepare for double-tap or swipe
-    const now = Date.now();
-    if (now - lastTapTime < 300) {
-      tapCount++;
-      if (tapCount === 2) {
-        // Double tap: toggle zoom
-        lightboxZoomLevel = lightboxZoomLevel > 1 ? 1 : 2.5;
-        const lightboxImg = document.getElementById('lightboxImg');
-        lightboxImg.style.transform = `scale(${lightboxZoomLevel})`;
-        tapCount = 0;
-      }
-    } else {
-      tapCount = 1;
-    }
-    lastTapTime = now;
-  }
-}
-
-function handleLightboxTouchMove(e) {
-  if (e.touches.length === 2 && lightboxPinchStart) {
-    e.preventDefault();
-    const currentDistance = getTouchDistance(e.touches[0], e.touches[1]);
-    const scale = currentDistance / lightboxPinchStart.distance;
-    lightboxZoomLevel = Math.max(1, Math.min(3, scale));
-    const lightboxImg = document.getElementById('lightboxImg');
-    lightboxImg.style.transform = `scale(${lightboxZoomLevel})`;
-  }
-}
-
-let swipeStart = null;
-function handleLightboxTouchEnd(e) {
-  lightboxPinchStart = null;
-
-  if (e.changedTouches.length === 1) {
-    // Swipe detection
-    const touch = e.changedTouches[0];
-    if (!swipeStart) return;
-
-    const deltaX = touch.clientX - swipeStart.x;
-    const deltaY = touch.clientY - swipeStart.y;
-
-    // Swipe left/right for navigation (RTL aware: left=next, right=prev)
-    if (Math.abs(deltaX) > 50) {
-      if (deltaX > 0) {
-        navigateLightbox(1); // Swiped right → next image
-      } else {
-        navigateLightbox(-1); // Swiped left → prev image
-      }
-    }
-    // Swipe down to close
-    else if (deltaY > 100) {
-      closeLightbox();
-    }
-
-    swipeStart = null;
-  }
-}
-
-// Start swipe tracking on touchstart
-document.getElementById('lightboxImg').addEventListener('touchstart', (e) => {
-  if (e.touches.length === 1) {
-    swipeStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-  }
-}, false);
-
 function getTouchDistance(touch1, touch2) {
   const dx = touch1.clientX - touch2.clientX;
   const dy = touch1.clientY - touch2.clientY;
   return Math.sqrt(dx * dx + dy * dy);
 }
 
-// Close button
-document.getElementById('lightboxClose').addEventListener('click', closeLightbox, false);
+// BUG 7 FIX: Attach listeners ONCE at init time, not on every open
+(function initLightboxListeners() {
+  const container = document.querySelector('.lightbox-container');
+  const lightboxImg = document.getElementById('lightboxImg');
 
-// Click overlay to close
-document.getElementById('lightboxOverlay').addEventListener('click', (e) => {
-  if (e.target === document.getElementById('lightboxOverlay')) {
-    closeLightbox();
-  }
-}, false);
+  container.addEventListener('touchstart', (e) => {
+    if (currentLightboxImages.length === 0) return; // lightbox not open
+
+    if (e.touches.length === 2) {
+      // Pinch zoom start
+      lightboxPinchStart = {
+        distance: getTouchDistance(e.touches[0], e.touches[1])
+      };
+      // BUG 8 FIX: remember current zoom level at pinch start
+      lightboxZoomAtPinchStart = lightboxZoomLevel;
+    } else if (e.touches.length === 1) {
+      // Track swipe start position
+      swipeStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+
+      // Double-tap detection
+      const now = Date.now();
+      if (now - lastTapTime < 300) {
+        // Double tap: toggle zoom
+        lightboxZoomLevel = lightboxZoomLevel > 1 ? 1 : 2.5;
+        lightboxImg.style.transform = `scale(${lightboxZoomLevel})`;
+        lastTapTime = 0; // reset to avoid triple-tap
+      } else {
+        lastTapTime = now;
+      }
+    }
+  }, { passive: true });
+
+  container.addEventListener('touchmove', (e) => {
+    if (currentLightboxImages.length === 0) return;
+
+    if (e.touches.length === 2 && lightboxPinchStart) {
+      e.preventDefault();
+      const currentDistance = getTouchDistance(e.touches[0], e.touches[1]);
+      const pinchRatio = currentDistance / lightboxPinchStart.distance;
+      // BUG 8 FIX: multiply by zoom level at pinch start, not from 1
+      lightboxZoomLevel = Math.max(1, Math.min(4, lightboxZoomAtPinchStart * pinchRatio));
+      lightboxImg.style.transform = `scale(${lightboxZoomLevel})`;
+    }
+  }, { passive: false });
+
+  container.addEventListener('touchend', (e) => {
+    if (currentLightboxImages.length === 0) return;
+    lightboxPinchStart = null;
+
+    if (e.changedTouches.length === 1 && swipeStart) {
+      const touch = e.changedTouches[0];
+      const deltaX = touch.clientX - swipeStart.x;
+      const deltaY = touch.clientY - swipeStart.y;
+
+      // Only process swipes if not zoomed and there was meaningful movement
+      if (Math.abs(deltaX) > 50 && Math.abs(deltaX) > Math.abs(deltaY)) {
+        // Swipe left/right for navigation
+        if (deltaX > 0) {
+          navigateLightbox(1); // Swiped right → next image
+        } else {
+          navigateLightbox(-1); // Swiped left → prev image
+        }
+      } else if (deltaY > 100 && Math.abs(deltaY) > Math.abs(deltaX)) {
+        // Swipe down to close
+        closeLightbox();
+      }
+
+      swipeStart = null;
+    }
+  }, { passive: true });
+
+  // Close button
+  document.getElementById('lightboxClose').addEventListener('click', closeLightbox, false);
+
+  // Click overlay background to close (not when clicking the image)
+  document.getElementById('lightboxOverlay').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('lightboxOverlay') ||
+        e.target === document.querySelector('.lightbox-container')) {
+      closeLightbox();
+    }
+  }, false);
+})();
 
 function addTapListener(el, handler) {
   if (!el) return;
