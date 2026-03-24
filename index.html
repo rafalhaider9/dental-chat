@@ -467,6 +467,224 @@
     background: rgba(255,255,255,0.15);
   }
 
+  /* ——— Image Gallery Grid ——— */
+  .image-gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    margin-top: 8px;
+  }
+
+  .gallery-thumb {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: transform 0.2s;
+  }
+
+  .gallery-thumb:active {
+    transform: scale(0.95);
+  }
+
+  /* ——— Multi-File Upload Preview ——— */
+  .file-preview-count {
+    padding: 8px 12px;
+    background: rgba(13, 115, 119, 0.08);
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--primary);
+    margin-bottom: 8px;
+    text-align: center;
+  }
+
+  .file-preview-strip {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 8px 0;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .file-preview-single {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    width: 70px;
+    position: relative;
+  }
+
+  .file-preview-visual {
+    width: 60px;
+    height: 60px;
+    background: rgba(0,0,0,0.04);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  .file-preview-thumb {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .file-preview-icon {
+    font-size: 28px;
+  }
+
+  .file-preview-details {
+    font-size: 11px;
+    text-align: center;
+    width: 100%;
+    overflow: hidden;
+  }
+
+  .file-preview-name {
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--text);
+  }
+
+  .file-preview-size {
+    font-size: 10px;
+    color: var(--text-muted);
+  }
+
+  .file-remove-btn {
+    position: absolute;
+    top: -6px;
+    left: -6px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: rgba(239, 68, 68, 0.9);
+    color: white;
+    border: none;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+  }
+
+  .upload-progress {
+    margin-top: 8px;
+    display: none;
+  }
+
+  .upload-progress.active {
+    display: block;
+  }
+
+  .upload-progress-bar {
+    width: 0%;
+    height: 4px;
+    background: var(--primary);
+    border-radius: 2px;
+    transition: width 0.2s;
+    margin-bottom: 4px;
+  }
+
+  .upload-progress-text {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  .file-batch-preview {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+  }
+
+  .batch-thumb {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: 4px;
+  }
+
+  .batch-pdf-badge {
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,0.05);
+    border-radius: 4px;
+    font-size: 20px;
+  }
+
+  /* ——— Lightbox / Fullscreen Image Viewer ——— */
+  .lightbox-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.92);
+    z-index: 9999;
+    display: none;
+    touch-action: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .lightbox-overlay.active {
+    display: flex;
+  }
+
+  .lightbox-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+
+  .lightbox-img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  .lightbox-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    font-size: 32px;
+    color: white;
+    cursor: pointer;
+    background: none;
+    border: none;
+    min-width: 44px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .lightbox-counter {
+    position: absolute;
+    top: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: white;
+    font-size: 14px;
+    direction: rtl;
+  }
+
   /* ——— Recording Overlay ——— */
   .recording-bar {
     display: none;
@@ -698,7 +916,7 @@
         <line x1="8" y1="23" x2="16" y2="23"/>
       </svg>
     </button>
-    <input type="file" id="fileInput" accept="image/*,application/pdf" style="display:none">
+    <input type="file" id="fileInput" accept="image/*,application/pdf" multiple style="display:none">
     <button class="btn btn-attach" id="attachBtn" type="button" title="إرفاق ملف">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
@@ -710,6 +928,15 @@
     <button class="btn btn-send" id="sendBtn" type="button" disabled title="إرسال">
       <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.4 20.4l17.45-7.48a1 1 0 0 0 0-1.84L3.4 3.6a.993.993 0 0 0-1.39.91L2 9.12c0 .5.37.93.87.99L17 12 2.87 13.88c-.5.07-.87.5-.87 1l.01 4.61c0 .71.73 1.2 1.39.91z"/></svg>
     </button>
+  </div>
+</div>
+
+<!-- Lightbox Overlay -->
+<div class="lightbox-overlay" id="lightboxOverlay">
+  <div class="lightbox-container">
+    <img class="lightbox-img" id="lightboxImg" src="" alt="صورة">
+    <button class="lightbox-close" id="lightboxClose" type="button" title="إغلاق">✕</button>
+    <div class="lightbox-counter" id="lightboxCounter"></div>
   </div>
 </div>
 
@@ -848,7 +1075,11 @@ function autoResize(el) {
 function handleKey(e) {
   if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault();
-    sendText();
+    if (selectedFiles.length > 0) {
+      sendFilesWithText();
+    } else {
+      sendText();
+    }
   }
 }
 
@@ -858,7 +1089,7 @@ function scrollToBottom() {
   });
 }
 
-function addMessage(text, type, isVoice = false, audioUrl = null) {
+function addMessage(text, type, isVoice = false, audioUrl = null, imageData = null, images = []) {
   const welcome = messagesEl.querySelector('.welcome');
   if (welcome) welcome.remove();
 
@@ -871,6 +1102,29 @@ function addMessage(text, type, isVoice = false, audioUrl = null) {
     html += `<div class="voice-tag">🎙️ رسالة صوتية</div>`;
   }
   div.innerHTML = html;
+
+  // Auto-link URLs in bot messages
+  if (type === 'bot') {
+    div.innerHTML = div.innerHTML.replace(
+      /(https?:\/\/[^\s<>"]+)/g,
+      '<a href="$1" target="_blank" rel="noopener">$1</a>'
+    );
+  }
+
+  // Render image gallery (new multi-image path)
+  if (images && images.length > 0) {
+    renderImageGallery(images, div);
+  }
+  // Fallback: render single image (legacy imageData path)
+  else if (imageData) {
+    const attachDiv = document.createElement('div');
+    attachDiv.className = 'file-attachment';
+    const img = document.createElement('img');
+    img.src = imageData;
+    img.alt = 'صورة المريض';
+    attachDiv.appendChild(img);
+    div.appendChild(attachDiv);
+  }
 
   // Create audio player via DOM API (Safari requires createElement for media elements)
   if (audioUrl) {
@@ -889,6 +1143,23 @@ function addMessage(text, type, isVoice = false, audioUrl = null) {
   saveToHistory(text, type, isVoice);
 
   return div;
+}
+
+function renderImageGallery(images, parentDiv) {
+  const grid = document.createElement('div');
+  grid.className = 'image-gallery-grid';
+
+  images.forEach((imgData, idx) => {
+    const thumb = document.createElement('img');
+    thumb.className = 'gallery-thumb';
+    thumb.src = imgData.thumbnail;
+    thumb.alt = imgData.name || 'صورة';
+    thumb.loading = 'lazy';
+    thumb.addEventListener('click', () => openLightbox(images, idx));
+    grid.appendChild(thumb);
+  });
+
+  parentDiv.appendChild(grid);
 }
 
 function addTyping() {
@@ -958,7 +1229,7 @@ async function sendText() {
 
     const data = await response.json();
     const reply = extractReply(data);
-    addMessage(reply, 'bot');
+    addMessage(reply.text, 'bot', false, null, reply.imageData);
 
   } catch (err) {
     removeTyping();
@@ -1009,7 +1280,7 @@ async function sendAudio(blob) {
 
     const data = await response.json();
     const reply = extractReply(data);
-    addMessage(reply, 'bot');
+    addMessage(reply.text, 'bot', false, null, reply.imageData);
 
   } catch (err) {
     removeTyping();
@@ -1020,115 +1291,230 @@ async function sendAudio(blob) {
 
 function extractReply(data) {
   // n8n Chat Trigger can return in multiple formats
-  if (typeof data === 'string') return data;
-  if (data.output) return data.output;
-  if (data.text) return data.text;
-  if (data.response) return data.response;
-  if (data.message) return data.message;
-  if (Array.isArray(data) && data.length > 0) {
+  let text, imageData, images = [];
+  if (typeof data === 'string') {
+    text = data;
+  } else if (data.output) {
+    text = data.output;
+    imageData = data.imageData || null;
+    images = data.images || [];
+  } else if (data.text) {
+    text = data.text;
+  } else if (data.response) {
+    text = data.response;
+  } else if (data.message) {
+    text = data.message;
+  } else if (Array.isArray(data) && data.length > 0) {
     const first = data[0];
-    return first.output || first.text || first.response || first.message || JSON.stringify(first);
+    text = first.output || first.text || first.response || first.message || JSON.stringify(first);
+    imageData = first.imageData || null;
+    images = first.images || [];
+  } else {
+    text = JSON.stringify(data);
   }
-  return JSON.stringify(data);
+  return { text: text, imageData: imageData || null, images: images };
 }
 
 // ———————————————————————————————————————————
 // FILE UPLOAD
 // ———————————————————————————————————————————
-let selectedFile = null;
+let selectedFiles = [];
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const MAX_TOTAL_SIZE = 30 * 1024 * 1024; // 30MB total
 
 function handleFileSelect(event) {
-  const file = event.target.files[0];
-  if (!file) return;
+  const files = Array.from(event.target.files);
+  if (files.length === 0) return;
 
-  // Validate file size (max 10MB)
-  if (file.size > 10 * 1024 * 1024) {
-    showToast('حجم الملف كبير جداً — الحد الأقصى 10MB');
+  // Validate each file and total size
+  let totalSize = 0;
+  const validFiles = [];
+
+  for (const file of files) {
+    if (file.size > MAX_FILE_SIZE) {
+      showToast(`ملف كبير جداً: ${file.name} — الحد الأقصى 10MB`);
+      continue;
+    }
+    totalSize += file.size;
+    validFiles.push(file);
+  }
+
+  if (totalSize > MAX_TOTAL_SIZE) {
+    showToast('إجمالي الملفات كبير جداً — الحد الأقصى 30MB');
     event.target.value = '';
     return;
   }
 
-  selectedFile = file;
-  showFilePreview(file);
+  selectedFiles = validFiles;
+  if (selectedFiles.length > 0) {
+    showFilesPreview(selectedFiles);
+  }
+  event.target.value = '';
 }
 
-function showFilePreview(file) {
+function showFilesPreview(files) {
   const previewItem = document.getElementById('filePreviewItem');
-  const isImage = file.type.startsWith('image/');
+  previewItem.innerHTML = '';
 
-  let thumbHtml;
-  if (isImage) {
-    const url = URL.createObjectURL(file);
-    thumbHtml = `<img class="file-preview-thumb" src="${url}" alt="preview">`;
-  } else {
-    thumbHtml = `<div class="file-preview-icon">📄</div>`;
+  // Count badge
+  const countBadge = document.createElement('div');
+  countBadge.className = 'file-preview-count';
+  countBadge.textContent = files.length + ' ملفات محددة';
+  previewItem.appendChild(countBadge);
+
+  // Horizontal scrollable strip
+  const strip = document.createElement('div');
+  strip.className = 'file-preview-strip';
+
+  files.forEach((file, idx) => {
+    const fileItem = document.createElement('div');
+    fileItem.className = 'file-preview-single';
+
+    const isImage = file.type.startsWith('image/');
+    let thumbHtml = '';
+
+    if (isImage) {
+      const url = URL.createObjectURL(file);
+      thumbHtml = `<img class="file-preview-thumb" src="${url}" alt="preview">`;
+    } else {
+      thumbHtml = `<div class="file-preview-icon">📄</div>`;
+    }
+
+    const sizeMB = (file.size / 1024 / 1024).toFixed(1);
+    const sizeStr = file.size < 1024 * 1024
+      ? `${Math.round(file.size / 1024)} KB`
+      : `${sizeMB} MB`;
+
+    fileItem.innerHTML = `
+      <div class="file-preview-visual">${thumbHtml}</div>
+      <div class="file-preview-details">
+        <div class="file-preview-name">${escapeHtml(file.name.substring(0, 12))}</div>
+        <div class="file-preview-size">${sizeStr}</div>
+      </div>
+      <button class="file-remove-btn" type="button" title="حذف">✕</button>
+    `;
+
+    const removeBtn = fileItem.querySelector('.file-remove-btn');
+    removeBtn.addEventListener('click', () => removeFileFromSelection(idx));
+
+    strip.appendChild(fileItem);
+  });
+
+  previewItem.appendChild(strip);
+
+  // Show upload progress bar (initially hidden)
+  if (!document.getElementById('uploadProgress')) {
+    const progressDiv = document.createElement('div');
+    progressDiv.id = 'uploadProgress';
+    progressDiv.className = 'upload-progress';
+    progressDiv.innerHTML = `
+      <div class="upload-progress-bar"></div>
+      <span class="upload-progress-text">جاري الرفع...</span>
+    `;
+    previewItem.appendChild(progressDiv);
   }
 
-  const sizeMB = (file.size / 1024 / 1024).toFixed(1);
-  const sizeStr = file.size < 1024 * 1024
-    ? `${Math.round(file.size / 1024)} KB`
-    : `${sizeMB} MB`;
-
-  previewItem.innerHTML = `
-    ${thumbHtml}
-    <div>
-      <div class="file-preview-name">${escapeHtml(file.name)}</div>
-      <div class="file-preview-size">${sizeStr}</div>
-    </div>
-  `;
-
   document.getElementById('filePreviewBar').classList.add('active');
-  document.getElementById('inputArea').style.display = 'none';
+  // KEEP text input visible (don't hide it)
+}
+
+function removeFileFromSelection(index) {
+  selectedFiles.splice(index, 1);
+  if (selectedFiles.length === 0) {
+    clearFileSelection();
+  } else {
+    showFilesPreview(selectedFiles);
+  }
 }
 
 function clearFileSelection() {
-  selectedFile = null;
+  selectedFiles = [];
   document.getElementById('fileInput').value = '';
   document.getElementById('filePreviewBar').classList.remove('active');
-  document.getElementById('inputArea').style.display = 'flex';
+  document.getElementById('filePreviewItem').innerHTML = '';
 }
 
-async function sendFile() {
-  if (!selectedFile || !config?.webhookUrl) return;
+async function sendFilesWithText() {
+  if (selectedFiles.length === 0 || !config?.webhookUrl) return;
 
-  const file = selectedFile;
-  const isImage = file.type.startsWith('image/');
+  const text = textInput.value.trim();
+  const msgText = text || ('📷 ' + selectedFiles.length + ' ملفات مرفقة');
 
-  // Build message with file attachment
-  const msgText = isImage ? '📷 صورة مرفقة' : '📎 ملف مرفق: ' + file.name;
-  const fileUrl = isImage ? URL.createObjectURL(file) : null;
+  // Show file previews in chat
+  const filePreviewDiv = document.createElement('div');
+  filePreviewDiv.className = 'file-batch-preview';
+  selectedFiles.forEach(file => {
+    const isImage = file.type.startsWith('image/');
+    if (isImage) {
+      const thumb = document.createElement('img');
+      thumb.src = URL.createObjectURL(file);
+      thumb.className = 'batch-thumb';
+      filePreviewDiv.appendChild(thumb);
+    } else {
+      const badge = document.createElement('div');
+      badge.className = 'batch-pdf-badge';
+      badge.textContent = '📄';
+      filePreviewDiv.appendChild(badge);
+    }
+  });
 
   clearFileSelection();
-  addFileMessage(msgText, 'user', file, fileUrl);
+  addMessage(msgText, 'user');
+  messagesEl.appendChild(filePreviewDiv);
   addTyping();
+  textInput.value = '';
+  textInput.style.height = 'auto';
 
   try {
     const formData = new FormData();
     formData.append('action', 'sendMessage');
     formData.append('sessionId', sessionId);
     formData.append('chatInput', msgText);
-    formData.append('files', file, file.name);
 
-    const response = await fetch(config.webhookUrl + '?action=sendMessage', {
-      method: 'POST',
-      headers: {
-        ...getAuthHeaders()
-      },
-      body: formData
+    // Append all files with the same key
+    selectedFiles.forEach(file => {
+      formData.append('files', file, file.name);
     });
 
-    removeTyping();
+    // Use XMLHttpRequest for progress tracking
+    const xhr = new XMLHttpRequest();
+    const progressDiv = document.getElementById('uploadProgress');
 
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    xhr.upload.addEventListener('progress', (e) => {
+      if (e.lengthComputable && progressDiv) {
+        const pct = Math.round((e.loaded / e.total) * 100);
+        document.querySelector('.upload-progress-bar').style.width = pct + '%';
+        document.querySelector('.upload-progress-text').textContent = `جاري الرفع: ${pct}%`;
+      }
+    });
 
-    const data = await response.json();
-    const reply = extractReply(data);
-    addMessage(reply, 'bot');
+    xhr.addEventListener('load', async () => {
+      removeTyping();
+      if (xhr.status !== 200) throw new Error(`HTTP ${xhr.status}`);
+      const data = JSON.parse(xhr.responseText);
+      const reply = extractReply(data);
+      addMessage(reply.text, 'bot', false, null, null, reply.images);
+    });
+
+    xhr.addEventListener('error', () => {
+      removeTyping();
+      console.error('File send error');
+      showToast('خطأ في إرسال الملفات — تحقق من الاتصال');
+    });
+
+    // Set auth headers
+    const headers = getAuthHeaders();
+    for (const key in headers) {
+      xhr.setRequestHeader(key, headers[key]);
+    }
+
+    xhr.open('POST', config.webhookUrl + '?action=sendMessage');
+    xhr.send(formData);
 
   } catch (err) {
     removeTyping();
     console.error('File send error:', err);
-    showToast('خطأ في إرسال الملف — تحقق من الاتصال');
+    showToast('خطأ في إرسال الملفات — تحقق من الاتصال');
   }
 }
 
@@ -1359,6 +1745,152 @@ document.querySelector('.header').addEventListener('click', () => {
 // ———————————————————————————————————————————
 // TOUCH-FRIENDLY EVENT LISTENERS (iPad fix)
 // ———————————————————————————————————————————
+// ———————————————————————————————————————————
+// LIGHTBOX / IMAGE VIEWER
+// ———————————————————————————————————————————
+let currentLightboxImages = [];
+let currentLightboxIndex = 0;
+let lightboxZoomLevel = 1;
+let lightboxPinchStart = null;
+
+function openLightbox(images, startIndex) {
+  currentLightboxImages = images;
+  currentLightboxIndex = startIndex;
+  lightboxZoomLevel = 1;
+
+  const lightboxOverlay = document.getElementById('lightboxOverlay');
+  const lightboxImg = document.getElementById('lightboxImg');
+
+  lightboxImg.src = images[startIndex].full;
+  updateLightboxCounter();
+  lightboxOverlay.classList.add('active');
+
+  // Prevent body scroll
+  document.body.style.overflow = 'hidden';
+
+  // Setup touch and click handlers
+  const container = document.querySelector('.lightbox-container');
+  container.addEventListener('touchstart', handleLightboxTouchStart, false);
+  container.addEventListener('touchmove', handleLightboxTouchMove, false);
+  container.addEventListener('touchend', handleLightboxTouchEnd, false);
+}
+
+function closeLightbox() {
+  const lightboxOverlay = document.getElementById('lightboxOverlay');
+  lightboxOverlay.classList.remove('active');
+  document.body.style.overflow = '';
+  currentLightboxImages = [];
+  lightboxZoomLevel = 1;
+}
+
+function updateLightboxCounter() {
+  const counter = document.getElementById('lightboxCounter');
+  counter.textContent = `${currentLightboxIndex + 1} / ${currentLightboxImages.length}`;
+}
+
+function navigateLightbox(direction) {
+  const newIndex = currentLightboxIndex + direction;
+  if (newIndex >= 0 && newIndex < currentLightboxImages.length) {
+    currentLightboxIndex = newIndex;
+    const lightboxImg = document.getElementById('lightboxImg');
+    lightboxImg.src = currentLightboxImages[newIndex].full;
+    lightboxZoomLevel = 1;
+    lightboxImg.style.transform = '';
+    updateLightboxCounter();
+  }
+}
+
+let lastTapTime = 0;
+let tapCount = 0;
+
+function handleLightboxTouchStart(e) {
+  if (e.touches.length === 2) {
+    // Pinch zoom start
+    lightboxPinchStart = {
+      distance: getTouchDistance(e.touches[0], e.touches[1])
+    };
+  } else if (e.touches.length === 1) {
+    // Single touch: prepare for double-tap or swipe
+    const now = Date.now();
+    if (now - lastTapTime < 300) {
+      tapCount++;
+      if (tapCount === 2) {
+        // Double tap: toggle zoom
+        lightboxZoomLevel = lightboxZoomLevel > 1 ? 1 : 2.5;
+        const lightboxImg = document.getElementById('lightboxImg');
+        lightboxImg.style.transform = `scale(${lightboxZoomLevel})`;
+        tapCount = 0;
+      }
+    } else {
+      tapCount = 1;
+    }
+    lastTapTime = now;
+  }
+}
+
+function handleLightboxTouchMove(e) {
+  if (e.touches.length === 2 && lightboxPinchStart) {
+    e.preventDefault();
+    const currentDistance = getTouchDistance(e.touches[0], e.touches[1]);
+    const scale = currentDistance / lightboxPinchStart.distance;
+    lightboxZoomLevel = Math.max(1, Math.min(3, scale));
+    const lightboxImg = document.getElementById('lightboxImg');
+    lightboxImg.style.transform = `scale(${lightboxZoomLevel})`;
+  }
+}
+
+let swipeStart = null;
+function handleLightboxTouchEnd(e) {
+  lightboxPinchStart = null;
+
+  if (e.changedTouches.length === 1) {
+    // Swipe detection
+    const touch = e.changedTouches[0];
+    if (!swipeStart) return;
+
+    const deltaX = touch.clientX - swipeStart.x;
+    const deltaY = touch.clientY - swipeStart.y;
+
+    // Swipe left/right for navigation (RTL aware: left=next, right=prev)
+    if (Math.abs(deltaX) > 50) {
+      if (deltaX > 0) {
+        navigateLightbox(1); // Swiped right → next image
+      } else {
+        navigateLightbox(-1); // Swiped left → prev image
+      }
+    }
+    // Swipe down to close
+    else if (deltaY > 100) {
+      closeLightbox();
+    }
+
+    swipeStart = null;
+  }
+}
+
+// Start swipe tracking on touchstart
+document.getElementById('lightboxImg').addEventListener('touchstart', (e) => {
+  if (e.touches.length === 1) {
+    swipeStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  }
+}, false);
+
+function getTouchDistance(touch1, touch2) {
+  const dx = touch1.clientX - touch2.clientX;
+  const dy = touch1.clientY - touch2.clientY;
+  return Math.sqrt(dx * dx + dy * dy);
+}
+
+// Close button
+document.getElementById('lightboxClose').addEventListener('click', closeLightbox, false);
+
+// Click overlay to close
+document.getElementById('lightboxOverlay').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('lightboxOverlay')) {
+    closeLightbox();
+  }
+}, false);
+
 function addTapListener(el, handler) {
   if (!el) return;
   let touchFired = false;
@@ -1378,11 +1910,23 @@ addTapListener(document.getElementById('micBtn'), startRecording);
 addTapListener(document.getElementById('attachBtn'), function() {
   document.getElementById('fileInput').click();
 });
-addTapListener(document.getElementById('sendBtn'), sendText);
+// Send button: route to sendText or sendFilesWithText based on selection
+addTapListener(document.getElementById('sendBtn'), function() {
+  if (selectedFiles.length > 0) {
+    sendFilesWithText();
+  } else {
+    sendText();
+  }
+});
 addTapListener(document.getElementById('cancelRecBtn'), cancelRecording);
 addTapListener(document.getElementById('stopRecBtn'), stopRecording);
 addTapListener(document.getElementById('cancelFileBtn'), clearFileSelection);
-addTapListener(document.getElementById('sendFileBtn'), sendFile);
+// Send file button
+addTapListener(document.getElementById('sendFileBtn'), function() {
+  if (selectedFiles.length > 0) {
+    sendFilesWithText();
+  }
+});
 
 document.getElementById('fileInput').addEventListener('change', handleFileSelect);
 
